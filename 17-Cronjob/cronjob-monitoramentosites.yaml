@@ -1,0 +1,17 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cronjob-monitor-sites
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: monitor-sites
+            image: azurenapratica/jobmonitorsites:1.0
+            env:
+            - name: BaseMonitoramento
+              value: CONEXÃO AZURE TABLE STORAGE
+          restartPolicy: OnFailure

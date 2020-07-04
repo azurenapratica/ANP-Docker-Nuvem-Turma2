@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apicontagem-service
+spec:
+  selector:
+    app: apicontagem
+  ports:
+    - port: 80
+  type: LoadBalancer

@@ -1,0 +1,10 @@
+    - name: Logando no Azure para Deployment
+      uses: Azure/login@v1.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deployment no Azure WebApp Container
+      uses: Azure/webapps-container-deploy@v1
+      with:
+        app-name: ${{ secrets.WEB_APP }}
+        images: ${{ secrets.DOCKER_CONTAINER_REGISTRY }}/${{ env.NOME_IMAGEM }}:latest

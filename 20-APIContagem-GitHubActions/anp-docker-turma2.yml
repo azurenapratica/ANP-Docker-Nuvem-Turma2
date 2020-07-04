@@ -1,0 +1,64 @@
+name: Turma 2 Docker + Kubernetes na nuvem | Azure na Pratica
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    env:
+      IDENTIFICACAO_ALUNO: aluno0
+      DIRETORIO_WEBAPP: CAMINHO
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Docker Login - Docker Hub
+      uses: Azure/docker-login@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+    - name: Build e Push no Docker Hub
+      env:
+        IMAGEM_DOCKERHUB: ${{ secrets.DOCKERHUB_USERNAME }}/apicontagem-${{ env.IDENTIFICACAO_ALUNO }}
+      run: |
+        cd ${{ env.DIRETORIO_WEBAPP }}
+        docker build . --file Dockerfile --tag $IMAGEM_DOCKERHUB:$GITHUB_RUN_NUMBER
+        docker tag $IMAGEM_DOCKERHUB:$GITHUB_RUN_NUMBER $IMAGEM_DOCKERHUB:latest
+        docker push $IMAGEM_DOCKERHUB
+        docker logout
+        
+    - name: Login no Azure Container Registry
+      uses: Azure/docker-login@v1
+      with:
+        username: ${{ secrets.AZURE_CONTAINER_REGISTRY_USERNAME }}
+        password: ${{ secrets.AZURE_CONTAINER_REGISTRY_PASSWORD }}
+        login-server: ${{ secrets.AZURE_CONTAINER_REGISTRY_SERVER }}
+
+    - name: Build e Push no Azure Container Registry
+      env:
+        IMAGEM_ACR: ${{ secrets.AZURE_CONTAINER_REGISTRY_SERVER }}/apicontagem:${{ env.IDENTIFICACAO_ALUNO }}
+      run: |
+        cd ${{ env.DIRETORIO_WEBAPP }}
+        docker build . --file Dockerfile --tag $IMAGEM_ACR
+        docker push $IMAGEM_ACR
+
+    - name: Logando no Azure para Deployment
+      uses: Azure/login@v1.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Azure WebApp Container - Deployment da Aplicacao
+      env:
+        WEB_APP: anp-${{ env.IDENTIFICACAO_ALUNO }} 
+        IMAGEM_DEPLOYMENT: ${{ secrets.AZURE_CONTAINER_REGISTRY_SERVER }}/apicontagem:${{ env.IDENTIFICACAO_ALUNO }}
+      uses: Azure/webapps-container-deploy@v1
+      with:
+        app-name: ${{ env.WEB_APP }}
+        images: ${{ env.IMAGEM_DEPLOYMENT }}

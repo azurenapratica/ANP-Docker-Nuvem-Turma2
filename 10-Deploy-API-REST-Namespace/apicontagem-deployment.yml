@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apicontagem-deployment
+  labels:
+    app: apicontagem
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: apicontagem
+  template:
+    metadata:
+      labels:
+        app: apicontagem
+    spec:
+      containers:
+      - name: apicontagem
+        image: azurenapratica/apicontagem:latest
+        env:
+          - name: TesteAmbiente
+            value: Bem-vindo ao Azure na Pratica - usand Namespaces
+        ports:
+        - containerPort: 80
